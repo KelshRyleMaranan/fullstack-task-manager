@@ -2,7 +2,7 @@
 
 A full stack task manager with user accounts, secure login, and a real PostgreSQL database. People register, log in, and manage their own tasks: create, edit, tick off, delete, and filter by status. Built as a portfolio project to practice SQL, authentication, and REST API design.
 
-**Live demo:** _coming soon_
+**Live demo:** [fullstack-task-manager-v5bk.onrender.com](https://fullstack-task-manager-v5bk.onrender.com) (free hosting, so the first load can take up to a minute)
 
 ![Task Manager screenshot](imgs/screenshot.png)
 
