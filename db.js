@@ -1,5 +1,8 @@
 require('dotenv').config({ quiet: true });
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// Keep DATE columns as plain 'YYYY-MM-DD' text (avoids time zone shifts)
+types.setTypeParser(1082, (value) => value);
 
 if (!process.env.DATABASE_URL) {
   console.warn('DATABASE_URL is missing. Add it to your .env file.');

@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const pool = require('./db');
 const authRoutes = require('./routes/auth');
+const taskRoutes = require('./routes/tasks');
 const requireAuth = require('./middleware/auth');
 
 const app = express();
@@ -26,6 +27,7 @@ app.get('/api/health/db', async (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Protected: only works with a valid token
 app.get('/api/me', requireAuth, async (req, res) => {
