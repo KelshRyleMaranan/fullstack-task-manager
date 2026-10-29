@@ -13,14 +13,108 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="card">
-    <h1>Task Manager</h1>
-    <p class="muted">Full stack app with login and a real database.</p>
-    <div class="status">
-      <span id="status-dot" class="dot"></span>
-      <span id="status-text">Checking server...</span>
+  <!-- LOGIN / REGISTER SCREEN -->
+  <section id="auth-view" class="view auth">
+    <div class="auth-card">
+      <h1 class="brand-title">Task Manager</h1>
+      <p class="muted" id="auth-subtitle">Log in to see your tasks.</p>
+
+      <div class="tabs">
+        <a href="#login" id="tab-login" class="tab active">Log in</a>
+        <a href="#register" id="tab-register" class="tab">Register</a>
+      </div>
+
+      <form id="auth-form" data-mode="login" novalidate>
+        <div class="field register-only">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" autocomplete="name" maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" />
+        </div>
+        <p class="form-error" id="form-error" role="alert"></p>
+        <button type="submit" class="btn btn-accent" id="submit-btn">Log in</button>
+      </form>
     </div>
-  </main>
+  </section>
+
+  <!-- APP SCREEN -->
+  <div id="app-view" class="view app hidden">
+    <aside class="sidebar">
+      <div class="brand">Task Manager</div>
+
+      <nav class="nav" aria-label="Task filters">
+        <a class="nav-link active" href="#app">All tasks <span class="count">2</span></a>
+        <a class="nav-link" href="#app">To-do <span class="count">1</span></a>
+        <a class="nav-link" href="#app">In progress <span class="count">1</span></a>
+        <a class="nav-link" href="#app">Done <span class="count">0</span></a>
+      </nav>
+
+      <div class="user">
+        <div class="avatar" id="user-initial">T</div>
+        <div class="user-info">
+          <strong id="user-name">Test User</strong>
+          <span id="user-email">test@example.com</span>
+        </div>
+        <a class="btn btn-ghost" id="logout-btn" href="#login">Log out</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h2>My tasks</h2>
+          <p class="muted">Stay on top of what matters.</p>
+        </div>
+        <button type="button" class="btn btn-dark">+ New task</button>
+      </div>
+
+      <!-- Sample rows below are placeholders. Commit 13 replaces them with real tasks. -->
+      <section class="group">
+        <header class="group-head">
+          <h3>To-do</h3>
+          <span class="count">1</span>
+        </header>
+        <div class="task-row">
+          <span class="check" aria-hidden="true"></span>
+          <div class="task-main">
+            <div class="task-title">Finish portfolio card</div>
+            <div class="task-meta">Due Nov 5</div>
+          </div>
+          <span class="pill pill-high">High</span>
+        </div>
+      </section>
+
+      <section class="group">
+        <header class="group-head">
+          <h3>In progress</h3>
+          <span class="count">1</span>
+        </header>
+        <div class="task-row">
+          <span class="check" aria-hidden="true"></span>
+          <div class="task-main">
+            <div class="task-title">Read Express docs</div>
+            <div class="task-meta">No due date</div>
+          </div>
+          <span class="pill pill-medium">Medium</span>
+        </div>
+      </section>
+
+      <section class="group">
+        <header class="group-head">
+          <h3>Done</h3>
+          <span class="count">0</span>
+        </header>
+        <p class="empty">Nothing here yet.</p>
+      </section>
+    </main>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
