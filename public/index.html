@@ -38,7 +38,7 @@
           <input id="password" name="password" type="password" autocomplete="current-password" />
         </div>
         <p class="form-error" id="form-error" role="alert"></p>
-        <button type="submit" class="btn btn-accent" id="submit-btn">Log in</button>
+        <button type="submit" class="btn btn-accent btn-block" id="submit-btn">Log in</button>
       </form>
     </div>
   </section>
@@ -49,17 +49,25 @@
       <div class="brand">Task Manager</div>
 
       <nav class="nav" aria-label="Task filters">
-        <a class="nav-link active" href="#app">All tasks <span class="count">2</span></a>
-        <a class="nav-link" href="#app">To-do <span class="count">1</span></a>
-        <a class="nav-link" href="#app">In progress <span class="count">1</span></a>
-        <a class="nav-link" href="#app">Done <span class="count">0</span></a>
+        <button type="button" class="nav-link active" data-filter="all">
+          All tasks <span class="count" data-count="all">0</span>
+        </button>
+        <button type="button" class="nav-link" data-filter="todo">
+          To-do <span class="count" data-count="todo">0</span>
+        </button>
+        <button type="button" class="nav-link" data-filter="in_progress">
+          In progress <span class="count" data-count="in_progress">0</span>
+        </button>
+        <button type="button" class="nav-link" data-filter="done">
+          Done <span class="count" data-count="done">0</span>
+        </button>
       </nav>
 
       <div class="user">
-        <div class="avatar" id="user-initial">T</div>
+        <div class="avatar" id="user-initial">?</div>
         <div class="user-info">
-          <strong id="user-name">Test User</strong>
-          <span id="user-email">test@example.com</span>
+          <strong id="user-name"></strong>
+          <span id="user-email"></span>
         </div>
         <a class="btn btn-ghost" id="logout-btn" href="#login">Log out</a>
       </div>
@@ -71,49 +79,59 @@
           <h2>My tasks</h2>
           <p class="muted">Stay on top of what matters.</p>
         </div>
-        <button type="button" class="btn btn-dark">+ New task</button>
+        <button type="button" class="btn btn-dark" id="new-task-btn">+ New task</button>
       </div>
 
-      <!-- Sample rows below are placeholders. Commit 13 replaces them with real tasks. -->
-      <section class="group">
-        <header class="group-head">
-          <h3>To-do</h3>
-          <span class="count">1</span>
-        </header>
-        <div class="task-row">
-          <span class="check" aria-hidden="true"></span>
-          <div class="task-main">
-            <div class="task-title">Finish portfolio card</div>
-            <div class="task-meta">Due Nov 5</div>
-          </div>
-          <span class="pill pill-high">High</span>
-        </div>
-      </section>
+      <p class="banner hidden" id="task-banner" role="alert">
+        <span id="task-banner-text"></span>
+        <button type="button" class="link-btn" id="retry-btn">Try again</button>
+      </p>
 
-      <section class="group">
-        <header class="group-head">
-          <h3>In progress</h3>
-          <span class="count">1</span>
-        </header>
-        <div class="task-row">
-          <span class="check" aria-hidden="true"></span>
-          <div class="task-main">
-            <div class="task-title">Read Express docs</div>
-            <div class="task-meta">No due date</div>
-          </div>
-          <span class="pill pill-medium">Medium</span>
-        </div>
-      </section>
-
-      <section class="group">
-        <header class="group-head">
-          <h3>Done</h3>
-          <span class="count">0</span>
-        </header>
-        <p class="empty">Nothing here yet.</p>
-      </section>
+      <div id="groups" aria-live="polite"></div>
     </main>
   </div>
+
+  <!-- NEW / EDIT TASK POPUP -->
+  <dialog id="task-dialog">
+    <h2 id="dialog-title">New task</h2>
+    <form id="task-form" novalidate>
+      <div class="field">
+        <label for="task-title">Title</label>
+        <input id="task-title" type="text" maxlength="120" />
+      </div>
+      <div class="field">
+        <label for="task-description">Description (optional)</label>
+        <textarea id="task-description" maxlength="1000" rows="3"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="task-status">Status</label>
+          <select id="task-status">
+            <option value="todo">To-do</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-priority">Priority</label>
+          <select id="task-priority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="task-due">Due date (optional)</label>
+        <input id="task-due" type="date" />
+      </div>
+      <p class="form-error" id="task-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="task-cancel">Cancel</button>
+        <button type="submit" class="btn btn-accent" id="task-save">Add task</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="script.js"></script>
 </body>
