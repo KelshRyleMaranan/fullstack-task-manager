@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'taskManagerToken';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SLOW_MESSAGE = 'Waking up the server. This can take up to a minute on free hosting...';
 
 const GROUPS = [
   { key: 'todo', label: 'To-do' },
@@ -48,6 +49,7 @@ let tasks = [];
 let filter = 'all';
 let tasksLoaded = false;
 let editingId = null;
+let startupNotice = null;
 const busyIds = new Set();
 
 // Hide the login card until we know whether you're already logged in
@@ -59,6 +61,20 @@ function el(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+// Shown on a blank page while a sleeping server wakes up
+function showStartupNotice() {
+  if (startupNotice) return;
+  startupNotice = el('p', 'muted', SLOW_MESSAGE);
+  startupNotice.style.cssText = 'padding: 2rem; text-align: center;';
+  document.body.prepend(startupNotice);
+}
+
+function hideStartupNotice() {
+  if (!startupNotice) return;
+  startupNotice.remove();
+  startupNotice = null;
 }
 
 /* ---------- Token storage ---------- */
@@ -87,32 +103,36 @@ function clearToken() {
 }
 
 /* ---------- API helper ---------- */
-async function api(path, { method = 'GET', body } = {}) {
+// onSlow runs if the server hasn't answered after 4 seconds
+async function api(path, { method = 'GET', body, onSlow } = {}) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
+  const slowTimer = onSlow ? setTimeout(onSlow, 4000) : null;
   let res;
+  let data = {};
+
   try {
     res = await fetch(path, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
+    try {
+      data = await res.json();
+    } catch (err) {
+      /* response had no JSON body */
+    }
   } catch (err) {
     throw new Error('Cannot reach the server. Check your connection.');
-  }
-
-  let data = {};
-  try {
-    data = await res.json();
-  } catch (err) {
-    /* response had no JSON body */
+  } finally {
+    clearTimeout(slowTimer);
   }
 
   if (!res.ok) {
-    const error = new Error(data.error || 'Something went wrong.');
+    const error = new Error(data.error || 'Something went wrong. Please try again.');
     error.status = res.status;
     throw error;
   }
@@ -163,7 +183,7 @@ function showUser(user) {
 async function loadUser() {
   if (!getToken()) return null;
   try {
-    const data = await api('/api/me');
+    const data = await api('/api/me', { onSlow: showStartupNotice });
     return data.user;
   } catch (err) {
     // Expired or invalid token: forget it
@@ -177,6 +197,7 @@ async function route() {
 
   if (!currentUser && getToken()) {
     currentUser = await loadUser();
+    hideStartupNotice();
   }
 
   if (currentUser) {
@@ -236,12 +257,24 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  const onSlow = () => {
+    submitBtn.textContent = 'Waking up the server...';
+  };
+
   setLoading(true);
   try {
     if (isRegister) {
-      await api('/api/auth/register', { method: 'POST', body: { name, email, password } });
+      await api('/api/auth/register', {
+        method: 'POST',
+        body: { name, email, password },
+        onSlow,
+      });
     }
-    const data = await api('/api/auth/login', { method: 'POST', body: { email, password } });
+    const data = await api('/api/auth/login', {
+      method: 'POST',
+      body: { email, password },
+      onSlow,
+    });
     setToken(data.token);
     currentUser = data.user;
     form.reset();
@@ -364,9 +397,14 @@ function render() {
 async function loadTasks() {
   tasksLoaded = true;
   hideBanner();
-  groupsEl.replaceChildren(el('p', 'muted loading', 'Loading your tasks...'));
+  const loadingEl = el('p', 'muted loading', 'Loading your tasks...');
+  groupsEl.replaceChildren(loadingEl);
   try {
-    const data = await api('/api/tasks');
+    const data = await api('/api/tasks', {
+      onSlow: () => {
+        loadingEl.textContent = SLOW_MESSAGE;
+      },
+    });
     tasks = data.tasks;
     render();
   } catch (err) {
