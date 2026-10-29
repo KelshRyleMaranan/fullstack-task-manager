@@ -11,6 +11,7 @@ const STATUSES = ['todo', 'in_progress', 'done'];
 const PRIORITIES = ['low', 'medium', 'high'];
 const TASK_COLUMNS =
   'id, title, description, status, priority, due_date, created_at, updated_at';
+const MAX_ID = 2147483647; // largest value of an INTEGER column
 
 function isValidDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -44,6 +45,11 @@ function parseTaskInput(body) {
   }
 
   return { value: { title, description, status, priority, dueDate } };
+}
+
+function parseId(raw) {
+  const id = Number(raw);
+  return Number.isInteger(id) && id >= 1 && id <= MAX_ID ? id : null;
 }
 
 // Create a task
@@ -85,6 +91,76 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error('List tasks failed:', err.message);
     res.status(500).json({ error: 'Could not load your tasks.' });
+  }
+});
+
+// Update a task (send only the fields you want to change)
+router.patch('/:id', async (req, res) => {
+  const id = parseId(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid task id.' });
+
+  const body = req.body ?? {};
+
+  try {
+    const existing = await pool.query(
+      `SELECT ${TASK_COLUMNS} FROM tasks WHERE id = $1 AND user_id = $2`,
+      [id, req.userId]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+    const current = existing.rows[0];
+
+    // Start from the saved task, then apply whatever was sent
+    const { error, value } = parseTaskInput({
+      title: body.title ?? current.title,
+      description: body.description ?? current.description,
+      status: body.status ?? current.status,
+      priority: body.priority ?? current.priority,
+      due_date: 'due_date' in body ? body.due_date : current.due_date,
+    });
+    if (error) return res.status(400).json({ error });
+
+    const result = await pool.query(
+      `UPDATE tasks
+       SET title = $1, description = $2, status = $3, priority = $4,
+           due_date = $5, updated_at = NOW()
+       WHERE id = $6 AND user_id = $7
+       RETURNING ${TASK_COLUMNS}`,
+      [
+        value.title,
+        value.description,
+        value.status,
+        value.priority,
+        value.dueDate,
+        id,
+        req.userId,
+      ]
+    );
+    res.json({ task: result.rows[0] });
+  } catch (err) {
+    console.error('Update task failed:', err.message);
+    res.status(500).json({ error: 'Could not update the task.' });
+  }
+});
+
+// Delete a task
+router.delete('/:id', async (req, res) => {
+  const id = parseId(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid task id.' });
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM tasks WHERE id = $1 AND user_id = $2 RETURNING id',
+      [id, req.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+    res.json({ message: 'Task deleted.' });
+  } catch (err) {
+    console.error('Delete task failed:', err.message);
+    res.status(500).json({ error: 'Could not delete the task.' });
   }
 });
 
